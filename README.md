@@ -17,7 +17,7 @@ This project is a Node.js backend microservice built with NestJS that handles au
 
 ## Tech Stack
 
-*   **Node.js** (v18+)
+*   **Node.js** (v22.14.0)
 *   **NestJS Framework**
 *   **PostgreSQL** (Database)
 *   **Prisma** (ORM)
