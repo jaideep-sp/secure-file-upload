@@ -20,7 +20,7 @@ async function main() {
   console.log(`Seeded user: ${user1Email}`);
 
   const user2Email = 'user2@example.com';
-  const user2Password = await bcrypt.hash('securepass', saltRounds);
+  const user2Password = await bcrypt.hash('password321', saltRounds);
   await prisma.user.upsert({
     where: { email: user2Email },
     update: { password: user2Password },
