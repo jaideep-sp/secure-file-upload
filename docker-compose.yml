@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secure-file-upload-app
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    volumes:
+      - ./uploads:/usr/src/app/uploads # Persist uploads on host
+      # Removed SQLite volume mount
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${PORT:-3000}
+      # Updated DATABASE_URL to use environment variables for PostgreSQL service
+      # These DB_USER, DB_PASSWORD, DB_NAME will be defined below or in your .env for docker-compose to pick up
+      DATABASE_URL: "postgresql://${DB_USER:-app_user}:${DB_PASSWORD:-app_password}@db:5432/${DB_NAME:-app_db}?schema=public"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_TIME: ${JWT_EXPIRATION_TIME:-3600s}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      UPLOAD_DEST: /usr/src/app/uploads
+      MAX_FILE_SIZE_BYTES: ${MAX_FILE_SIZE_BYTES:-10485760}
+      FILE_PROCESSING_QUEUE_NAME: ${FILE_PROCESSING_QUEUE_NAME:-file-processing-queue}
+      PROCESS_FILE_JOB_NAME: ${PROCESS_FILE_JOB_NAME:-process-file-job}
+
+      # Variables for the app to connect to the PostgreSQL container (used in DATABASE_URL above)
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-app_password}
+      DB_NAME: ${DB_NAME:-app_db}
+      # DB_HOST: db # This is implicitly used in DATABASE_URL by using "db" as host
+
+    depends_on:
+      redis:
+        condition: service_healthy
+      db: # Added dependency on the PostgreSQL service
+        condition: service_healthy
+    networks:
+      - app-network
+    command: >
+      sh -c "
+        echo 'Waiting for services to be ready...'
+        # Ensure PostgreSQL is ready (healthcheck in 'db' service helps)
+        
+        if [ \"$${NODE_ENV}\" = \"production\" ]; then
+          echo 'Running Prisma migrations for production...'
+          npx prisma migrate deploy;
+        else
+          echo 'Running Prisma migrations for development...'
+          # The '--name docker_init' will be created on first run
+          # '--skip-generate' assumes prisma client is generated during Docker build
+          npx prisma migrate dev --name docker_postgres_init --skip-generate;
+        fi &&
+        
+        echo 'Running Prisma database seed...'
+        npx prisma db seed &&
+        
+        echo 'Starting application...'
+        node dist/main.js
+      "
+
+  redis:
+    image: redis:7-alpine
+    container_name: secure-file-upload-redis
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # --- PostgreSQL Service ---
+ 
+volumes:
+  redis-data: {}
+  postgres-data: {} # Define the volume for PostgreSQL data
+
+networks:
+  app-network:
+    driver: bridge
