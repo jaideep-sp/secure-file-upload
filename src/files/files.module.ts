@@ -1,4 +1,4 @@
-import { Module, Logger } from '@nestjs/common'; // Import Logger
+import { Module, Logger } from '@nestjs/common'; 
 import { FilesService } from './files.service';
 import { FilesController } from './files.controller';
 import { MulterModule } from '@nestjs/platform-express';
@@ -6,7 +6,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import * as fs from 'fs';
-import * as path from 'path'; // Import path module
+import * as path from 'path'; 
 import { ProcessingModule } from '../processing/processing.module';
 import { PrismaModule } from '../prisma/prisma.module';
 
@@ -17,7 +17,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     MulterModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
-        const logger = new Logger(MulterModule.name); // Local logger for this factory
+        const logger = new Logger(MulterModule.name);
         const relativeUploadDest = configService.get<string>('app.uploadDest');
         const absoluteUploadDest = path.isAbsolute(relativeUploadDest)
           ? relativeUploadDest
@@ -55,7 +55,6 @@ import { PrismaModule } from '../prisma/prisma.module';
         return {
           storage: diskStorage({
             destination: (req, file, cb) => {
-              // Ensure cb is called with absolute path
               cb(null, absoluteUploadDest);
             },
             filename: (req, file, cb) => {
@@ -71,7 +70,6 @@ import { PrismaModule } from '../prisma/prisma.module';
             fileSize: maxFileSize,
           },
           // fileFilter: (req, file, cb) => {
-          //   // Basic example of file filter
           //   if (!file.mimetype.startsWith('image/')) {
           //     return cb(new BadRequestException('Only image files are allowed!'), false);
           //   }
@@ -84,6 +82,6 @@ import { PrismaModule } from '../prisma/prisma.module';
     ProcessingModule,
   ],
   controllers: [FilesController],
-  providers: [FilesService], // Logger is provided globally in AppModule or available by default
+  providers: [FilesService],
 })
 export class FilesModule {}

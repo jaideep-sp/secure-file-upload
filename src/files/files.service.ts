@@ -8,14 +8,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
-// Use FileStatus enum from Prisma
 import { FileStatus } from '@prisma/client';
 import { FileProducerService } from '../processing/file.producer.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { AuthenticatedUser } from '../auth/strategies/jwt.strategy';
-import * as fs from 'fs'; // Use Node.js fs for sync operations like unlinkSync
-
-// Define a custom File type based on your Prisma schema
+import * as fs from 'fs'; 
 type File = {
   id: number;
   userId: number;
@@ -49,11 +46,12 @@ export class FilesService {
       this.logger.error(
         `User ${user.email} attempt to create record without a file.`,
       );
-      // This case should ideally be caught by ParseFilePipe or Multer itself
       throw new BadRequestException('No file was uploaded.');
     }
     this.logger.log(
-      `Creating file record for ${uploadedFile.originalname} (Size: ${uploadedFile.size}, Mime: ${uploadedFile.mimetype}) by user ${user.id} (${user.email})`,
+      `Creating file record for ${uploadedFile.originalname}
+       (Size: ${uploadedFile.size},
+        Mime: ${uploadedFile.mimetype}) by user ${user.id} (${user.email})`,
     );
 
     let newFile: File;
@@ -89,7 +87,6 @@ export class FilesService {
         `Error creating file record or queueing for ${uploadedFile.originalname}: ${error.message}`,
         error.stack,
       );
-      // If DB entry or queueing fails, attempt to clean up the uploaded file
       if (uploadedFile && uploadedFile.path) {
         try {
           fs.unlinkSync(uploadedFile.path);
@@ -135,7 +132,6 @@ export class FilesService {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { storagePath, ...result } = file;
     return result;
   }

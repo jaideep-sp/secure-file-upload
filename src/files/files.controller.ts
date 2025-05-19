@@ -34,8 +34,6 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 
-// Get maxFileSize from .env directly for decorator, as ConfigService isn't available at class definition.
-// MulterModule will use the ConfigService for the primary check.
 const maxFileSizeForPipeValidator =
   parseInt(process.env.MAX_FILE_SIZE_BYTES, 10) || 10 * 1024 * 1024;
 
@@ -48,13 +46,12 @@ export class FilesController {
 
   constructor(
     private readonly filesService: FilesService,
-    // ConfigService is available here and used by MulterModule implicitly via FilesModule
     private readonly configService: ConfigService,
   ) {}
 
   @Post('upload')
   @HttpCode(HttpStatus.ACCEPTED)
-  @UseInterceptors(FileInterceptor('file')) // Configured in FilesModule
+  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a file' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -92,11 +89,8 @@ export class FilesController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          // This MaxFileSizeValidator acts as a secondary check.
-          // Primary limit is from MulterModule.registerAsync.
           new MaxFileSizeValidator({ maxSize: maxFileSizeForPipeValidator }),
         ],
-        // fileIsRequired: true, // default is true
         exceptionFactory: (error) => {
         //   this.logger.warn(
         //     `ParseFilePipe validation failed: ${error ?? 'Unknown error'}`,
@@ -109,9 +103,6 @@ export class FilesController {
     @Body() uploadFileDto: UploadFileDto,
     @User() user: AuthenticatedUser,
   ) {
-    // uploadedFile will be null if Multer rejects (e.g. too large) before ParseFilePipe runs,
-    // or if fileIsRequired=false and no file is sent.
-    // ParseFilePipe handles the `fileIsRequired` case.
     if (!uploadedFile) {
       this.logger.warn(
         `Upload attempt by ${user.email} without a file object reaching the controller (likely filtered by Multer).`,

@@ -18,12 +18,9 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
     BullModule.registerQueueAsync({
       imports: [ConfigModule],
-      // Name here is critical for @InjectQueue and @Processor to find the correct queue.
-      // It should match what's in bullmq.config.ts or the .env variable.
-      name: process.env.FILE_PROCESSING_QUEUE_NAME || 'file-processing-queue', // Fallback just in case
+      name: process.env.FILE_PROCESSING_QUEUE_NAME || 'file-processing-queue',
       useFactory: (configService: ConfigService) => ({
-        name: configService.get<string>('bullmq.queueName'), // Primary way to get queue name
-        // defaultJobOptions: { ... } // if needed
+        name: configService.get<string>('bullmq.queueName'),
       }),
       inject: [ConfigService],
     }),

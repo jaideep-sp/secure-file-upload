@@ -15,60 +15,35 @@ import { Logger } from '@nestjs/common';
 import { FileJobData } from './file.producer.service';
 import { ConfigService } from '@nestjs/config';
 
-// The processor's queue name must match the one used in the module registration and producer
 @Processor(process.env.FILE_PROCESSING_QUEUE_NAME || 'file-processing-queue')
 export class FileProcessor extends WorkerHost {
-  // Extend WorkerHost
+
   private readonly logger = new Logger(FileProcessor.name);
-  private readonly configuredJobName: string; // Store the job name we expect to process
+  private readonly configuredJobName: string; 
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    super(); // Call super() for WorkerHost
+    super(); 
     this.configuredJobName = this.configService.get<string>('bullmq.jobName');
   }
 
-  // This single 'process' method will handle all jobs pushed to this worker's queue
   async process(job: Job<FileJobData, any, string>): Promise<any> {
-    // string is the type for job.name
+
     this.logger.log(
       `Received job: ID=${job.id}, Name=${job.name}, Data=${JSON.stringify(job.data)}`,
     );
 
-    // If you intend this worker to only process jobs with a specific name:
     if (job.name !== this.configuredJobName) {
       this.logger.warn(
         `Job ${job.id} with name ${job.name} is not the configured job name '${this.configuredJobName}'. Skipping.`,
       );
-      // You might throw an error or simply return to ignore it.
-      // Depending on queue setup, unhandled jobs might be retried or marked as failed.
-      // For this setup, we assume all jobs in this queue are meant for this processor.
-      // If this check is crucial, ensure jobs are added to the queue with the correct name.
     }
 
-    // Here, we directly call the logic because we assume all jobs in this queue
-    // are 'process-file-job' as configured. If you had multiple job types in this queue,
-    // you would use a switch statement on job.name as per the docs.
-
-    // Example structure for multiple job names in one queue/processor:
-    // switch (job.name) {
-    //   case this.configuredJobName: // e.g., 'process-file-job'
-    //     return this.handleProcessFileLogic(job.data, job);
-    //   case 'another-job-type':
-    //     // return this.handleAnotherJobType(job.data, job);
-    //     break;
-    //   default:
-    //     this.logger.warn(`Unknown job name: ${job.name}`);
-    //     throw new Error(`Unhandled job name: ${job.name}`);
-    // }
-
-    // For this specific task, we directly call the processing logic:
     return this.handleProcessFileLogic(job.data, job);
   }
 
-  // Extracted the actual file processing logic into a helper method
   private async handleProcessFileLogic(
     data: FileJobData,
     job: Job<FileJobData, any, string>,
@@ -102,7 +77,8 @@ export class FileProcessor extends WorkerHost {
 
       const fileContent = await fs.readFile(fileRecord.storagePath);
       const hash = crypto.createHash('md5').update(fileContent).digest('hex');
-      const extractedData = `MD5 Checksum: ${hash}, Size: ${fileRecord.size} bytes, Original: ${fileRecord.originalFilename.substring(0, 50)}`;
+      const extractedData = `MD5 Checksum: ${hash}, Size: ${fileRecord.size} bytes,
+       Original: ${fileRecord.originalFilename.substring(0, 50)}`;
 
       await this.prisma.file.update({
         where: { id: fileId },
@@ -119,7 +95,7 @@ export class FileProcessor extends WorkerHost {
         success: true,
         fileId: fileId,
         message: 'File processed successfully.',
-      }; // Example return value
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown processing error';
@@ -135,7 +111,7 @@ export class FileProcessor extends WorkerHost {
           updatedAt: new Date(),
         },
       });
-      throw error; // Re-throw so BullMQ marks job as failed
+      throw error; 
     }
   }
 }

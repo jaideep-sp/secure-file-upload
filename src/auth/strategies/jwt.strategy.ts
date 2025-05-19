@@ -9,7 +9,6 @@ export interface JwtPayload {
   email: string;
 }
 
-// This will be the type of req.user
 export interface AuthenticatedUser {
   id: number;
   email: string;

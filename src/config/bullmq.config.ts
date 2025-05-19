@@ -1,7 +1,5 @@
 import { registerAs } from '@nestjs/config';
 
-// These constants can be imported elsewhere if needed directly,
-// but the config service is the preferred way to access them.
 export const DEFAULT_FILE_PROCESSING_QUEUE_NAME = 'file-processing-queue';
 export const DEFAULT_PROCESS_FILE_JOB_NAME = 'process-file-job';
 
