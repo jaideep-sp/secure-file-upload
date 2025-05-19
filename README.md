@@ -2,6 +2,8 @@
 
 This project is a Node.js backend microservice built with NestJS that handles authenticated file uploads, stores associated metadata in a PostgreSQL database, and processes uploaded files asynchronously using BullMQ with Redis.
 
+ # ( Switch to MASTER Branch )
+
 ## Core Features
 
 *   **Authentication:** JWT-based authentication (`/auth/login`).
@@ -38,14 +40,14 @@ This project is a Node.js backend microservice built with NestJS that handles au
 
 ### 1. Clone the Repository
 
-git clone  https://github.com/jaideep-sp/secure-file-upload.git
+    git clone  https://github.com/jaideep-sp/secure-file-upload.git
 
-cd secure-file-upload-service
+    cd secure-file-upload-service
 
 
 2. Environment Variables
 Copy the example environment file and customize it:
-cp .env.example .env
+   cp .env.example .env
 
 Edit the .env file with your specific configurations, especially:
 DATABASE_URL: Your PostgreSQL connection string.
@@ -58,29 +60,31 @@ For Docker Compose Redis service: redis & 6379 (these are set in docker-compose.
 If using the db service in docker-compose.yml, set DB_USER, DB_PASSWORD, DB_NAME in .env as they are used by both the app and the Postgres container.
 
 3. Install Dependencies
-npm install
-or
-yarn install
+           
+        npm install
+        or
+        yarn install
 
 3. Setup Database (Prisma)
 Ensure your prisma/schema.prisma reflects the PostgreSQL setup.
 Generate Prisma Client:
-npx prisma generate
+
+       npx prisma generate
 
 Run migrations to create the database schema in your PostgreSQL database:
 
-npx prisma migrate dev --name initial-setup
+    npx prisma migrate dev --name initial-setup
 
 Seed initial users (optional but recommended for testing login):
 
-npx prisma db seed
+    npx prisma db seed
 
 (Default seeded users: user1@example.com / password123, user2@example.com / password123)
 
 5. Running the Application
 Option A: Locally (Ensure PostgreSQL and Redis are running separately)
 
-npm run start:dev
+        npm run start:dev
 
 The application will typically be available at http://localhost:3000.
 Option B: Using Docker Compose (Recommended for consistent environment)
@@ -88,14 +92,15 @@ This will start the NestJS application, a PostgreSQL database, and a Redis insta
 Make sure your .env file is configured for the Docker environment 
 (e.g., REDIS_HOST=redis, correct DATABASE_URL for the db service, DB_USER, DB_PASSWORD, DB_NAME).
 
-docker-compose up --build
+    docker-compose up --build
 
 The application will be available at http://localhost:3000 (or the PORT specified in .env).
 Migrations and seeding are typically handled by the command in the app service within docker-compose.yml on startup.
 
 6. Accessing API Documentation
 Once the application is running (in a non-production environment), Swagger UI documentation is available at:
-http://localhost:3000/api-docs
+
+        http://localhost:3000/api-docs
 
 ## API Flow Example
  *  POST /auth/login: Authenticate with seeded user credentials (e.g., user1@example.com, password123) to get a JWT access token.
